@@ -36,9 +36,9 @@ def draw_picture(
     return out_img
 
 
-def adapt_pic(pic, image, torso: TorsoKeypoints):
+def adapt_pic(print_, image, torso: TorsoKeypoints):
     """
-    :param pic: picture to be transformed
+    :param print_: picture to be transformed
     :param image: image to be augmented with pic
     :param torso: tuple(lsh, rsh, lh, rh)
         lsh: left shoulder coordinates
@@ -47,20 +47,22 @@ def adapt_pic(pic, image, torso: TorsoKeypoints):
         rh: right hip coordinates
     :return: transformed pic
     """
-    torso = [getattr(torso, part).coords(True) for part in ('right_shoulder',
-                                                            'left_shoulder',
-                                                            'right_hip',
-                                                            'left_hip')]
-
-    x, y, *_ = pic.shape
-    pts1 = np.float32(((0, 0), (y, 0), (0, x), (y, x)))
-
-    pts2 = np.float32(torso)
-    transformation_matrix = cv2.getPerspectiveTransform(pts1, pts2)
+    x, y, *_ = print_.shape
+    transformation_matrix = cv2.getPerspectiveTransform(
+        np.float32(((0, 0), (y, 0), (0, x), (y, x))),
+        np.float32(
+            [
+                torso.right_shoulder.coords(True),
+                torso.left_shoulder.coords(True),
+                torso.right_hip.coords(True),
+                torso.left_hip.coords(True),
+            ]
+        )
+    )
 
     ix, iy, *_ = image.shape
     dim = (iy, ix)
-    return cv2.warpPerspective(pic, transformation_matrix, dim)
+    return cv2.warpPerspective(print_, transformation_matrix, dim)
 
 
 # def get_torso_keypoints(keypoints):
@@ -124,7 +126,7 @@ def get_kpts(impath):
 
 def overlay_transparent(background_img, img_to_overlay_t):
     """
-    @brief      Overlays a transparant PNG onto another image using CV2
+    @brief      Overlays a transparent PNG onto another image using CV2
 
     @param      background_img    The background image
     @param      img_to_overlay_t  The transparent image to overlay (has alpha channel)
@@ -159,7 +161,7 @@ def overlay_transparent(background_img, img_to_overlay_t):
     return cv2.add(img1_bg, overlay_color)
 
 
-class Stage1Transormator:
+class ProjectableRegion:
     def __init__(self, ul, ur, dl, dr, output_width, output_height):
         self._coords = (ul, ur, dl, dr)
         self._output_resolution = (output_width, output_height)
@@ -170,7 +172,7 @@ class Stage1Transormator:
                           (output_width, output_height)))
         self._transformation_matrix = cv2.getPerspectiveTransform(pts1, pts2)
 
-    def __call__(self, webcam_img):
+    def of(self, webcam_img):
         return cv2.warpPerspective(webcam_img,
                                    self._transformation_matrix,
                                    self._output_resolution)
@@ -189,8 +191,8 @@ class Apng:
 
 def process_frame(webcam_frame, apng_frame, transform1, projection,
                   sess, output_stride, model_outputs):
-    projected_region = transform1(webcam_frame)
-    input_image, display_image, output_scale = posenet.process_input(projected_region,
+    target_region = transform1(webcam_frame)
+    input_image, display_image, output_scale = posenet.process_input(target_region,
                                                                      output_stride=output_stride)
     heatmaps_result, offsets_result, displacement_fwd_result, displacement_bwd_result = sess.run(
         model_outputs,
@@ -203,7 +205,8 @@ def process_frame(webcam_frame, apng_frame, transform1, projection,
         displacement_bwd_result.squeeze(axis=0),
         output_stride=output_stride,
         max_pose_detections=10,
-        min_pose_score=0.15)
+        min_pose_score=0.15
+    )
 
     keypoint_coords *= output_scale
 
@@ -215,13 +218,9 @@ def process_frame(webcam_frame, apng_frame, transform1, projection,
 
 
 def do_projection(image, animation_frame, poses: Poses, overlay_bg=None):
-    layers = []
-    if overlay_bg is not None:
-        layers.append(overlay_bg)
-
+    layers = [] if overlay_bg is None else [overlay_bg]
     for t in map(TorsoKeypoints.from_pose, poses.threshold(0.15)):
         projection = adapt_pic(animation_frame, image, t)
         layers.append(projection)
 
-    return reduce(lambda p1, p2: overlay_transparent(p1, p2),
-                  layers)
+    return reduce(overlay_transparent, layers)

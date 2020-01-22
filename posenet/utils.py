@@ -99,3 +99,6 @@ def draw_skel_and_kp(
         flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     out_img = cv2.polylines(out_img, adjacent_keypoints, isClosed=False, color=(255, 255, 0))
     return out_img
+
+
+process_input = _process_input

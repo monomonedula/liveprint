@@ -27,6 +27,15 @@ class Poses:
                 self.keypoint_coords)
         ]
 
+    def torso_keypoints(self, threshold=0.15):
+        return tuple(
+            TorsoKeypoints(list(Keypoints(kc, ks)))
+            for pscore, ks, kc in zip(
+                self.pose_scores[self.pose_scores >= threshold],
+                self.keypoint_scores,
+                self.keypoint_coords)
+        )
+
 
 class Pose:
     def __init__(self, score, keypoints):
@@ -35,12 +44,6 @@ class Pose:
 
     def threshold(self, t):
         return self._score >= t
-
-    def torso(self):
-        return TorsoKeypoints(self._kpts)
-
-    def keypoints(self):
-        return self._kpts
 
 
 class TorsoKeypoints:
@@ -54,15 +57,8 @@ class TorsoKeypoints:
     def __init__(self, kpts: List['Keypoint']):
         self.kpts = kpts
 
-    def __getattr__(self, item):
-        return self._part(item)
-
-    def _part(self, name):
+    def __getattr__(self, name):
         return self.kpts[self.names[name]]
-
-    @classmethod
-    def from_pose(cls, pose: Pose):
-        return cls(list(pose.keypoints()))
 
 
 class Keypoints:
