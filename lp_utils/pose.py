@@ -9,41 +9,15 @@ class Poses:
         self.keypoint_scores = keypoint_scores
         self.keypoint_coords = keypoint_coords
 
-    def __iter__(self):
-        return iter(
-            Pose(pscore, Keypoints(kc, ks))
-            for pscore, ks, kc in zip(
-                self.pose_scores,
-                self.keypoint_scores,
-                self.keypoint_coords)
-        )
-
-    def threshold(self, t):
-        return [
-            Pose(pscore, Keypoints(kc, ks))
-            for pscore, ks, kc in zip(
-                self.pose_scores[self.pose_scores >= t],
-                self.keypoint_scores,
-                self.keypoint_coords)
-        ]
-
     def torso_keypoints(self, threshold=0.15):
         return tuple(
             TorsoKeypoints(list(Keypoints(kc, ks)))
             for pscore, ks, kc in zip(
                 self.pose_scores[self.pose_scores >= threshold],
                 self.keypoint_scores,
-                self.keypoint_coords)
+                self.keypoint_coords
+            )
         )
-
-
-class Pose:
-    def __init__(self, score, keypoints):
-        self._score = score
-        self._kpts = keypoints
-
-    def threshold(self, t):
-        return self._score >= t
 
 
 class TorsoKeypoints:
@@ -63,6 +37,8 @@ class TorsoKeypoints:
 
 class Keypoints:
     def __init__(self, kpts, kpts_scores):
+        print(f"\n\n {kpts}")
+        print(f"\n\n {kpts_scores}")
         self._kpts = kpts
         self._kpts_scores = kpts_scores
 

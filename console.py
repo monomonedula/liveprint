@@ -18,7 +18,7 @@ def main():
             model_cfg, model_outputs = posenet.load_model(101, sess)
             output_stride = model_cfg['output_stride']
 
-            paths = ['test/oldschool to ae{:03d}.png'.format(i) for i in range(111)]
+            paths = ['apng/oldschool to ae{:03d}.png'.format(i) for i in range(111)]
             frames = [cv2.imread(p, cv2.IMREAD_UNCHANGED) for p in paths]
             apng = Apng(frames)
             trans = Stage1Transormator(ul, ur, dl, dr, 1024, 768)

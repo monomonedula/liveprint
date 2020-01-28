@@ -1,39 +1,10 @@
-from functools import reduce
 
 import cv2
 import numpy as np
 import tensorflow as tf
 import posenet
 
-from posenet.utils import get_adjacent_keypoints
-from lp_utils.pose import Pose, Keypoints, TorsoKeypoints, Keypoint, Poses
-
-
-def draw_picture(
-        img, instance_scores, keypoint_scores, keypoint_coords,
-        picture,
-        min_pose_score=0.5, min_part_score=0.5):
-    out_img = img
-    adjacent_keypoints = []
-    cv_keypoints = []
-    for ii, score in enumerate(instance_scores):
-        if score < min_pose_score:
-            continue
-
-        new_keypoints = get_adjacent_keypoints(
-            keypoint_scores[ii, :], keypoint_coords[ii, :, :], min_part_score)
-        adjacent_keypoints.extend(new_keypoints)
-
-        for ks, kc in zip(keypoint_scores[ii, :], keypoint_coords[ii, :, :]):
-            if ks < min_part_score:
-                continue
-            cv_keypoints.append(cv2.KeyPoint(kc[1], kc[0], 10. * ks))
-
-    out_img = cv2.drawKeypoints(
-        out_img, cv_keypoints, outImage=np.array([]), color=(255, 255, 0),
-        flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    out_img = cv2.polylines(out_img, adjacent_keypoints, isClosed=False, color=(255, 255, 0))
-    return out_img
+from lp_utils.pose import TorsoKeypoints
 
 
 def adapt_pic(print_, image, torso: TorsoKeypoints):
@@ -48,30 +19,29 @@ def adapt_pic(print_, image, torso: TorsoKeypoints):
     :return: transformed pic
     """
     x, y, *_ = print_.shape
+    print("print shape ", print_.shape)
+    print(
+        torso.left_shoulder.coords(),
+        torso.right_shoulder.coords(),
+        torso.left_hip.coords(),
+        torso.right_hip.coords(True),
+    )
     transformation_matrix = cv2.getPerspectiveTransform(
-        np.float32(((0, 0), (y, 0), (0, x), (y, x))),
+        np.float32(((0, 0), (x, 0), (0, y), (x, y))),
         np.float32(
             [
-                torso.right_shoulder.coords(True),
-                torso.left_shoulder.coords(True),
-                torso.right_hip.coords(True),
-                torso.left_hip.coords(True),
+                torso.left_shoulder.coords(),
+                torso.right_shoulder.coords(),
+                torso.left_hip.coords(),
+                torso.right_hip.coords(),
             ]
         )
     )
 
     ix, iy, *_ = image.shape
     dim = (iy, ix)
+    # dim = (ix, iy)
     return cv2.warpPerspective(print_, transformation_matrix, dim)
-
-
-# def get_torso_keypoints(keypoints):
-#     kp = keypoints[RIGHT_SHOULDER], keypoints[LEFT_SHOULDER], \
-#          keypoints[RIGHT_HIP], keypoints[LEFT_HIP]
-#     return tuple(
-#         (int(x), int(y))
-#         for y, x in kp
-#     )
 
 
 def convert_gif_to_frames(gif):
@@ -130,9 +100,6 @@ def overlay_transparent(background_img, img_to_overlay_t):
 
     @param      background_img    The background image
     @param      img_to_overlay_t  The transparent image to overlay (has alpha channel)
-    @param      x                 x location to place the top-left corner of our overlay
-    @param      y                 y location to place the top-left corner of our overlay
-    @param      overlay_size      The size to scale our overlay to (tuple), no scaling if None
 
     @return     Background image with overlay on top
     """
@@ -187,40 +154,3 @@ class Apng:
         i = self.i
         self.i = (self.i + 1) % len(self.frames)
         return self.frames[i]
-
-
-def process_frame(webcam_frame, apng_frame, transform1, projection,
-                  sess, output_stride, model_outputs):
-    target_region = transform1(webcam_frame)
-    input_image, display_image, output_scale = posenet.process_input(target_region,
-                                                                     output_stride=output_stride)
-    heatmaps_result, offsets_result, displacement_fwd_result, displacement_bwd_result = sess.run(
-        model_outputs,
-        feed_dict={'image:0': input_image}
-    )
-    pose_scores, keypoint_scores, keypoint_coords = posenet.decode_multi.decode_multiple_poses(
-        heatmaps_result.squeeze(axis=0),
-        offsets_result.squeeze(axis=0),
-        displacement_fwd_result.squeeze(axis=0),
-        displacement_bwd_result.squeeze(axis=0),
-        output_stride=output_stride,
-        max_pose_detections=10,
-        min_pose_score=0.15
-    )
-
-    keypoint_coords *= output_scale
-
-    poses = Poses(pose_scores, keypoint_scores, keypoint_coords)
-
-    bg = 255 * np.ones(shape=[768, 1024, 3], dtype=np.uint8)
-    torso_projections = projection(projected_region, apng_frame, poses, bg)
-    return torso_projections
-
-
-def do_projection(image, animation_frame, poses: Poses, overlay_bg=None):
-    layers = [] if overlay_bg is None else [overlay_bg]
-    for t in map(TorsoKeypoints.from_pose, poses.threshold(0.15)):
-        projection = adapt_pic(animation_frame, image, t)
-        layers.append(projection)
-
-    return reduce(overlay_transparent, layers)
