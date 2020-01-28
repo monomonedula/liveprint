@@ -50,8 +50,3 @@ def test_projector():
         FakeProjectableRegion(*projectable_region_dims),
         Apng([cv2.imread(path, cv2.IMREAD_UNCHANGED)])
     ).project(None)
-    print(output_image[740, 161, :])
-    cv2.imwrite("output_test.png", output_image)
-
-
-# def test_adapt_pic():

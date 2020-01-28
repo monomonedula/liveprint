@@ -59,7 +59,6 @@ class LivePrint:
 
     def run(self):
         while True:
-            print("frame")
             cv2.imshow("posenet", self._projector.project(self._cap.read()[1]))
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
@@ -76,11 +75,14 @@ class Projector:
 
     def project(self, image):
         layers = self._bg.layers()
-        image = self._projectable_region.of(image)
-        for torso in self._poses_factory.poses(image).torso_keypoints():
-            print("torso")
-            projection = adapt_pic(self._animation.next_frame(), image, torso)
-            cv2.imwrite("projection_test.png", projection)
+        roi = self._projectable_region.of(image)
+        bg = layers[0]
+        for torso in self._poses_factory.poses(roi).torso_keypoints():
+            projection = adapt_pic(self._animation.next_frame(), roi, torso)
+            cv2.circle(bg, torso.left_shoulder.coords(), 4, (0, 0, 0), 4)
+            cv2.circle(bg, torso.right_shoulder.coords(), 4, (0, 255, 0), 4)
+            cv2.circle(bg, torso.left_hip.coords(), 4, (255, 0, 0), 4)
+            cv2.circle(bg, torso.right_hip.coords(), 4, (0, 0, 255), 4)
             layers.append(projection)
         return reduce(overlay_transparent, layers)
 

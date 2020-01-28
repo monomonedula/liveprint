@@ -19,13 +19,6 @@ def adapt_pic(print_, image, torso: TorsoKeypoints):
     :return: transformed pic
     """
     x, y, *_ = print_.shape
-    print("print shape ", print_.shape)
-    print(
-        torso.left_shoulder.coords(),
-        torso.right_shoulder.coords(),
-        torso.left_hip.coords(),
-        torso.right_hip.coords(True),
-    )
     transformation_matrix = cv2.getPerspectiveTransform(
         np.float32(((0, 0), (x, 0), (0, y), (x, y))),
         np.float32(
@@ -40,7 +33,6 @@ def adapt_pic(print_, image, torso: TorsoKeypoints):
 
     ix, iy, *_ = image.shape
     dim = (iy, ix)
-    # dim = (ix, iy)
     return cv2.warpPerspective(print_, transformation_matrix, dim)
 
 
@@ -140,9 +132,11 @@ class ProjectableRegion:
         self._transformation_matrix = cv2.getPerspectiveTransform(pts1, pts2)
 
     def of(self, webcam_img):
-        return cv2.warpPerspective(webcam_img,
-                                   self._transformation_matrix,
-                                   self._output_resolution)
+        return cv2.warpPerspective(
+            webcam_img,
+            self._transformation_matrix,
+            self._output_resolution
+        )
 
 
 class Apng:

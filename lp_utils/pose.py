@@ -37,16 +37,12 @@ class TorsoKeypoints:
 
 class Keypoints:
     def __init__(self, kpts, kpts_scores):
-        print(f"\n\n {kpts}")
-        print(f"\n\n {kpts_scores}")
         self._kpts = kpts
         self._kpts_scores = kpts_scores
 
     def __iter__(self):
-        print(self._kpts_scores)
-        print(self._kpts_scores.shape)
         return iter(Keypoint(n, x, y, score)
-                    for n, ((x, y), score) in
+                    for n, ((y, x), score) in
                     enumerate(zip(self._kpts, self._kpts_scores)))
 
     def iter_threshold(self, t):
@@ -68,6 +64,4 @@ class Keypoint:
         return self.score >= thresh
 
     def coords(self, inv=False):
-        if inv:
-            return self.y, self.x
-        return self.x, self.y
+        return int(self.x), int(self.y)
