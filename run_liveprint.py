@@ -3,11 +3,19 @@ import cv2
 import argparse
 
 import posenet
-from liveprint import get_apng, get_corners, proj_dim, LivePrint, Projector, Background, PosesFactory, WebcamBackground
+from liveprint import (
+    get_apng,
+    get_corners,
+    LivePrint,
+    Projector,
+    Background,
+    PosesFactory,
+    WebcamBackground,
+)
 from lp_utils.utils import ProjectableRegion
 
 
-def main(apng, corners, proj_dimensions):
+def main(apng, corners, proj_dimensions, projector):
     try:
         with tf.Session() as sess:
             model_cfg, model_outputs = posenet.load_model(101, sess)
@@ -20,8 +28,11 @@ def main(apng, corners, proj_dimensions):
             )
             LivePrint(
                 Projector(
-                    WebcamBackground(cap),
-                    # Background([1080, 1920, 3]),
+                    Background([*proj_dimensions, 3])
+                    if projector
+                    else WebcamBackground(
+                        cap, ProjectableRegion(*corners, *proj_dimensions)
+                    ),
                     PosesFactory(sess, output_stride, model_outputs),
                     ProjectableRegion(*corners, *proj_dimensions),
                     apng,
@@ -40,20 +51,34 @@ if __name__ == "__main__":
         "--corners_file",
         type=str,
         help="Path to a file containing"
-             " integer x and y coordinates of the projectable region"
-             " inside a web cam frame.\n"
-             " Example is provided: corners_example.txt",
+        " integer x and y coordinates of the projectable region corners"
+        " inside a web cam frame.\n"
+        " Example is provided: corners_example.txt",
     )
     parser.add_argument(
         "--apng",
         type=str,
         help="Path to a file with a list" "of the apng animation frames paths.",
     )
-    parser.add_argument("--proj_width", type=int)
-    parser.add_argument("--proj_height", type=int)
+    parser.add_argument(
+        "--test",
+        dest="projector",
+        action="store_false",
+        help="This option is used for the test run of the app (without a projector)."
+        " The video from the web cam is used as the background when this option is selected.",
+    )
+    parser.set_defaults(projector=True)
+    parser.add_argument(
+        "--proj_width", type=int, help="The width of the projector in pixels"
+    )
+    parser.add_argument(
+        "--proj_height", type=int, help="The height of the projector in pixels"
+    )
+    parser.add_argument("--webcam", type=int, help="Webcam device id (0, 1, 2 etc.)")
+    parser.set_defaults(webcam=0)
 
     args = parser.parse_args()
     apng = get_apng(args)
     corners = get_corners(args)
-    proj_dimensions = proj_dim(args)
-    main(apng, corners, proj_dimensions)
+    proj_dimensions = args.proj_width, args.proj_height
+    main(apng, corners, proj_dimensions, args.projector)

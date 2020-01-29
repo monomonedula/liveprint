@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -28,7 +27,7 @@ def adapt_pic(print_, image, torso: TorsoKeypoints):
                 torso.left_hip.coords(),
                 torso.right_hip.coords(),
             ]
-        )
+        ),
     )
 
     ix, iy, *_ = image.shape
@@ -66,14 +65,16 @@ def read_apng(filenames):
 def get_kpts(impath):
     with tf.Session() as sess:
         model_cfg, model_outputs = posenet.load_model(101, sess)
-        output_stride = model_cfg['output_stride']
-        input_image, draw_image, output_scale = posenet.read_imgfile(impath,
-                                                                     scale_factor=1.0,
-                                                                     output_stride=output_stride)
-        heatmaps_result, offsets_result, displacement_fwd_result, displacement_bwd_result = sess.run(
-            model_outputs,
-            feed_dict={'image:0': input_image}
+        output_stride = model_cfg["output_stride"]
+        input_image, draw_image, output_scale = posenet.read_imgfile(
+            impath, scale_factor=1.0, output_stride=output_stride
         )
+        (
+            heatmaps_result,
+            offsets_result,
+            displacement_fwd_result,
+            displacement_bwd_result,
+        ) = sess.run(model_outputs, feed_dict={"image:0": input_image})
         pose_scores, keypoint_scores, keypoint_coords = posenet.decode_multiple_poses(
             heatmaps_result.squeeze(axis=0),
             offsets_result.squeeze(axis=0),
@@ -81,7 +82,8 @@ def get_kpts(impath):
             displacement_bwd_result.squeeze(axis=0),
             output_stride=output_stride,
             max_pose_detections=10,
-            min_pose_score=0.25)
+            min_pose_score=0.25,
+        )
         keypoint_coords *= output_scale
         return pose_scores, keypoint_scores, keypoint_coords, draw_image
 
@@ -109,7 +111,9 @@ def overlay_transparent(background_img, img_to_overlay_t):
     # roi = background_img[y:y + h, x:x + w]
 
     # Black-out the area behind the logo in our original ROI
-    img1_bg = cv2.bitwise_and(background_img, background_img, mask=cv2.bitwise_not(mask))
+    img1_bg = cv2.bitwise_and(
+        background_img, background_img, mask=cv2.bitwise_not(mask)
+    )
 
     # cv2.namedWindow('callibration', cv2.WND_PROP_FULLSCREEN)
 
@@ -125,17 +129,19 @@ class ProjectableRegion:
         self._coords = (ul, ur, dl, dr)
         self._output_resolution = (output_width, output_height)
         pts1 = np.float32(self._coords)
-        pts2 = np.float32(((0, 0),
-                          (output_width, 0),
-                          (0, output_height),
-                          (output_width, output_height)))
+        pts2 = np.float32(
+            (
+                (0, 0),
+                (output_width, 0),
+                (0, output_height),
+                (output_width, output_height),
+            )
+        )
         self._transformation_matrix = cv2.getPerspectiveTransform(pts1, pts2)
 
     def of(self, webcam_img):
         return cv2.warpPerspective(
-            webcam_img,
-            self._transformation_matrix,
-            self._output_resolution
+            webcam_img, self._transformation_matrix, self._output_resolution
         )
 
 

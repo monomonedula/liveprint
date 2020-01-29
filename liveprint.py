@@ -25,13 +25,6 @@ def get_corners(args):
     return ul, ur, dl, dr
 
 
-def proj_dim(args):
-    """
-    :return: Dimensions of a projecting device
-    """
-    return args.proj_width, args.proj_height
-
-
 class FrameNotFound(Exception):
     pass
 
@@ -99,11 +92,12 @@ class Background:
 
 
 class WebcamBackground:
-    def __init__(self, cap):
+    def __init__(self, cap, projectable_region):
         self._cap = cap
+        self._projectabe_region = projectable_region
 
     def layers(self):
-        return [self._cap.read()[1]]
+        return [self._projectabe_region.of(self._cap.read()[1])]
 
 
 class PosesFactory:

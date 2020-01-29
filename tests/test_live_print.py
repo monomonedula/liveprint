@@ -42,11 +42,13 @@ class FakeProjectableRegion:
 
 
 def test_projector():
-    path = os.path.join(pathlib.Path(__file__).parent.absolute(), "..", "resources", "test_image_1.png")
+    path = os.path.join(
+        pathlib.Path(__file__).parent.absolute(), "..", "resources", "test_image_1.png"
+    )
     projectable_region_dims = [768, 1024]
     output_image = Projector(
         Background([*projectable_region_dims, 3]),
         FakePosesFactory(),
         FakeProjectableRegion(*projectable_region_dims),
-        Apng([cv2.imread(path, cv2.IMREAD_UNCHANGED)])
+        Apng([cv2.imread(path, cv2.IMREAD_UNCHANGED)]),
     ).project(None)
