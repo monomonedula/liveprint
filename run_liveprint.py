@@ -15,12 +15,12 @@ from liveprint import (
 from lp_utils.utils import ProjectableRegion
 
 
-def main(apng, corners, proj_dimensions, projector):
+def main(apng, corners, proj_dimensions, projector, cam):
     try:
         with tf.Session() as sess:
             model_cfg, model_outputs = posenet.load_model(101, sess)
             output_stride = model_cfg["output_stride"]
-            cap = cv2.VideoCapture(2)
+            cap = cv2.VideoCapture(cam)
 
             cv2.namedWindow("posenet", cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty(
@@ -81,4 +81,4 @@ if __name__ == "__main__":
     apng = get_apng(args)
     corners = get_corners(args)
     proj_dimensions = args.proj_width, args.proj_height
-    main(apng, corners, proj_dimensions, args.projector)
+    main(apng, corners, proj_dimensions, args.projector, args.webcam)

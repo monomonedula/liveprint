@@ -57,11 +57,8 @@ class Keypoint:
         self.y = y
         self.score = score
 
-    def name(self):
-        return posenet.PART_NAMES[self.number]
-
     def threshold(self, thresh):
         return self.score >= thresh
 
-    def coords(self, inv=False):
+    def coords(self):
         return int(self.x), int(self.y)

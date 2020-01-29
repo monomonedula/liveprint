@@ -62,32 +62,6 @@ def read_apng(filenames):
     return [cv2.imread(f, cv2.IMREAD_UNCHANGED) for f in filenames]
 
 
-def get_kpts(impath):
-    with tf.Session() as sess:
-        model_cfg, model_outputs = posenet.load_model(101, sess)
-        output_stride = model_cfg["output_stride"]
-        input_image, draw_image, output_scale = posenet.read_imgfile(
-            impath, scale_factor=1.0, output_stride=output_stride
-        )
-        (
-            heatmaps_result,
-            offsets_result,
-            displacement_fwd_result,
-            displacement_bwd_result,
-        ) = sess.run(model_outputs, feed_dict={"image:0": input_image})
-        pose_scores, keypoint_scores, keypoint_coords = posenet.decode_multiple_poses(
-            heatmaps_result.squeeze(axis=0),
-            offsets_result.squeeze(axis=0),
-            displacement_fwd_result.squeeze(axis=0),
-            displacement_bwd_result.squeeze(axis=0),
-            output_stride=output_stride,
-            max_pose_detections=10,
-            min_pose_score=0.25,
-        )
-        keypoint_coords *= output_scale
-        return pose_scores, keypoint_scores, keypoint_coords, draw_image
-
-
 def overlay_transparent(background_img, img_to_overlay_t):
     """
     @brief      Overlays a transparent PNG onto another image using CV2
