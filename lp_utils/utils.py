@@ -35,29 +35,6 @@ def adapt_pic(print_, image, torso: TorsoKeypoints):
     return cv2.warpPerspective(print_, transformation_matrix, dim)
 
 
-def convert_gif_to_frames(gif):
-    # Initialize the frame number and create empty frame list
-    frame_num = 0
-    frame_list = []
-
-    # Loop until there are frames left
-    while True:
-        try:
-            # Try to read a frame. Okay is a BOOL if there are frames or not
-            okay, frame = gif.read()
-            # Append to empty frame list
-            if not okay:
-                break
-            frame_list.append(frame)
-            # Break if there are no other frames to read
-            # Increment value of the frame number by 1
-            frame_num += 1
-        except KeyboardInterrupt:  # press ^C to quit
-            break
-
-    return frame_list
-
-
 def read_apng(filenames):
     return [cv2.imread(f, cv2.IMREAD_UNCHANGED) for f in filenames]
 
