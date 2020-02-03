@@ -37,7 +37,7 @@ class AutoDetectedPRCoords(PRCoords):
     # TODO: cache this
     def _detect(self):
         pass
-    
+
     def ul(self) -> Tuple[int, int]:
         if not self._detected:
             self._detect()
