@@ -31,13 +31,8 @@ class Projector:
     def project(self, image):
         layers = self._bg.layers()
         roi = self._projectable_region.of(image)
-        # bg = layers[0]
         for torso in self._poses_factory.poses(roi).torso_keypoints():
             projection = adapt_pic(self._animation.next_frame(), roi, torso)
-            # cv2.circle(bg, torso.left_shoulder.coords(), 4, (0, 0, 0), 4)
-            # cv2.circle(bg, torso.right_shoulder.coords(), 4, (0, 255, 0), 4)
-            # cv2.circle(bg, torso.left_hip.coords(), 4, (255, 0, 0), 4)
-            # cv2.circle(bg, torso.right_hip.coords(), 4, (0, 0, 255), 4)
             layers.append(projection)
         return reduce(overlay_transparent, layers)
 
