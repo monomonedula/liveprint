@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
+from methodtools import lru_cache
 
 from liveprint.pose import TorsoKeypoints
+from liveprint.system_setup import PRCoords
 
 
 def adapt_pic(print_, image, torso: TorsoKeypoints):
@@ -63,19 +65,30 @@ class ProjectableRegion:
     where the image is being projected on) from webcam
     image and transforming its perspective to fit the projector dimensions.
     """
-    def __init__(self, ul, ur, dl, dr, output_width, output_height):
-        self._coords = (ul, ur, dl, dr)
-        self._output_resolution = (output_width, output_height)
-        pts1 = np.float32(self._coords)
+    def __init__(self, coords: PRCoords, output_width, output_height):
+        self._coords = coords
+        self._output_width = output_width
+        self._output_height = output_height
+
+    @lru_cache
+    def _transformation_matrix(self):
+        pts1 = np.float32(
+            (
+                self._coords.ul(),
+                self._coords.ur(),
+                self._coords.ll(),
+                self._coords.lr(),
+            )
+        )
         pts2 = np.float32(
             (
                 (0, 0),
-                (output_width, 0),
-                (0, output_height),
-                (output_width, output_height),
+                (self._output_width, 0),
+                (0, self._output_height),
+                (self._output_width, self._output_height),
             )
         )
-        self._transformation_matrix = cv2.getPerspectiveTransform(pts1, pts2)
+        return cv2.getPerspectiveTransform(pts1, pts2)
 
     def of(self, webcam_img):
         """
@@ -83,7 +96,7 @@ class ProjectableRegion:
         :return: np.array -- extracted region of interested
         """
         return cv2.warpPerspective(
-            webcam_img, self._transformation_matrix, self._output_resolution
+            webcam_img, self._transformation_matrix, (self._output_width, self._output_height)
         )
 
 
