@@ -7,6 +7,7 @@ from typing import Tuple, List
 import numpy as np
 import cv2
 from cv2 import aruco
+from methodtools import lru_cache
 
 
 class PRCoords(ABC):
@@ -30,6 +31,28 @@ class PRCoords(ABC):
     def all(self) -> Tuple[Tuple[int, int], Tuple[int, int],
                            Tuple[int, int], Tuple[int, int]]:
         pass
+
+
+class CachedPRCoords(PRCoords):
+    def __init__(self, coords: PRCoords):
+        self._origin = coords
+
+    @lru_cache
+    def ul(self) -> Tuple[int, int]:
+        return self._origin.ul()
+
+    def ur(self) -> Tuple[int, int]:
+        return self._origin.ur()
+
+    def ll(self) -> Tuple[int, int]:
+        return self._origin.ll()
+
+    def lr(self) -> Tuple[int, int]:
+        return self._origin.lr()
+
+    def all(self) -> Tuple[Tuple[int, int], Tuple[int, int],
+                           Tuple[int, int], Tuple[int, int]]:
+        return self._origin.all()
 
 
 class AutoDetectedPRCoords(PRCoords):

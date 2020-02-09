@@ -59,7 +59,7 @@ def overlay_transparent(background_img, img_to_overlay_t):
     return cv2.add(img1_bg, overlay_color)
 
 
-class ProjectableRegion:
+class StaticProjectableRegion:
     """
     This class is used for the extraction of the region of interest (the region
     where the image is being projected on) from webcam
@@ -70,7 +70,7 @@ class ProjectableRegion:
         self._output_width = output_width
         self._output_height = output_height
 
-    @lru_cache
+    @lru_cache()
     def _transformation_matrix(self):
         pts1 = np.float32(
             (
@@ -96,7 +96,7 @@ class ProjectableRegion:
         :return: np.array -- extracted region of interested
         """
         return cv2.warpPerspective(
-            webcam_img, self._transformation_matrix, (self._output_width, self._output_height)
+            webcam_img, self._transformation_matrix(), (self._output_width, self._output_height)
         )
 
 
