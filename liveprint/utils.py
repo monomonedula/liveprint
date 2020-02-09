@@ -65,6 +65,7 @@ class StaticProjectableRegion:
     where the image is being projected on) from webcam
     image and transforming its perspective to fit the projector dimensions.
     """
+
     def __init__(self, coords: PRCoords, output_width, output_height):
         self._coords = coords
         self._output_width = output_width
@@ -96,7 +97,9 @@ class StaticProjectableRegion:
         :return: np.array -- extracted region of interested
         """
         return cv2.warpPerspective(
-            webcam_img, self._transformation_matrix(), (self._output_width, self._output_height)
+            webcam_img,
+            self._transformation_matrix(),
+            (self._output_width, self._output_height),
         )
 
 

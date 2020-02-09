@@ -67,9 +67,12 @@ def test_projector():
     ).project(None)
     expected_image = cv2.imread(
         os.path.join(
-            pathlib.Path(__file__).parent.absolute(), "..", "resources", "test_output_1.png"
+            pathlib.Path(__file__).parent.absolute(),
+            "..",
+            "resources",
+            "test_output_1.png",
         ),
-        cv2.IMREAD_UNCHANGED
+        cv2.IMREAD_UNCHANGED,
     )
     np.testing.assert_almost_equal(output_image, expected_image)
 
@@ -93,8 +96,11 @@ def test_projector_transparent_background():
     ).project(None)
     expected_image = cv2.imread(
         os.path.join(
-            pathlib.Path(__file__).parent.absolute(), "..", "resources", "test_output_2.png"
+            pathlib.Path(__file__).parent.absolute(),
+            "..",
+            "resources",
+            "test_output_2.png",
         ),
-        cv2.IMREAD_UNCHANGED
+        cv2.IMREAD_UNCHANGED,
     )
     np.testing.assert_almost_equal(output_image, expected_image)

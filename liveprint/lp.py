@@ -53,6 +53,7 @@ class WebcamBackground:
     Background used for a test run.
     Returns the projectable region from the webcam as the background.
     """
+
     def __init__(self, cap, projectable_region):
         """
         :param cap: opencv webcam

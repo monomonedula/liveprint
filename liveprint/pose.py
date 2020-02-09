@@ -4,7 +4,9 @@ from typing import List, Tuple, Union
 
 class Poses(ABC):
     @abstractmethod
-    def torso_keypoints(self, threshold=0.15) -> Union[List["TorsoKeypoints"], Tuple["TorsoKeypoints"]]:
+    def torso_keypoints(
+        self, threshold=0.15
+    ) -> Union[List["TorsoKeypoints"], Tuple["TorsoKeypoints"]]:
         pass
 
 
