@@ -1,24 +1,26 @@
 import os
 import pathlib
+from unittest.mock import Mock
 
 import cv2
 import numpy as np
 
 from liveprint.lp import Projector, WhiteBackground
+from liveprint.pose import PosesFactory, Poses, Keypoint, TorsoKeyPoints
 from liveprint.utils import Apng
 
 
-class FakePosesFactory:
+class FakePosesFactory(PosesFactory):
     def poses(self, image):
         return FakePoses()
 
 
-class FakePoses:
+class FakePoses(Poses):
     def torso_keypoints(self, threshold=0.15):
         return iter([FakeTorsoKeypoints()])
 
 
-class FakeKeypoint:
+class FakeKeypoint(Keypoint):
     def __init__(self, number, x, y, score):
         self.number = number
         self.x = x
@@ -32,7 +34,19 @@ class FakeKeypoint:
         return int(self.x), int(self.y)
 
 
-class FakeTorsoKeypoints:
+class FakeTorsoKeypoints(TorsoKeyPoints):
+    def left_shoulder(self) -> "Keypoint":
+        return self._left_shoulder
+
+    def right_shoulder(self) -> "Keypoint":
+        return self._right_shoulder
+
+    def left_hip(self) -> "Keypoint":
+        return self._left_hip
+
+    def right_hip(self) -> "Keypoint":
+        return self._right_hip
+
     def __init__(
         self,
         left_shoulder=(740, 161,),
@@ -40,10 +54,11 @@ class FakeTorsoKeypoints:
         left_hip=(759, 308,),
         right_hip=(862, 311,),
     ):
-        self.left_shoulder = FakeKeypoint(5, *left_shoulder, 0.6)
-        self.right_shoulder = FakeKeypoint(6, *right_shoulder, 0.6)
-        self.left_hip = FakeKeypoint(11, *left_hip, 0.6)
-        self.right_hip = FakeKeypoint(12, *right_hip, 0.6)
+
+        self._left_shoulder = FakeKeypoint(5, *left_shoulder, 0.6)
+        self._right_shoulder = FakeKeypoint(6, *right_shoulder, 0.6)
+        self._left_hip = FakeKeypoint(11, *left_hip, 0.6)
+        self._right_hip = FakeKeypoint(12, *right_hip, 0.6)
 
 
 class FakeProjectableRegion:
@@ -64,7 +79,7 @@ def test_projector():
         FakePosesFactory(),
         FakeProjectableRegion(*projectable_region_dims),
         Apng([cv2.imread(path, cv2.IMREAD_UNCHANGED)]),
-    ).project(None)
+    ).project(Mock())
     expected_image = cv2.imread(
         os.path.join(
             pathlib.Path(__file__).parent.absolute(),

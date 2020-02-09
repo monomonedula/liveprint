@@ -3,6 +3,7 @@ from functools import reduce
 import numpy as np
 import cv2
 
+from liveprint.pose import PosesFactory
 from liveprint.utils import overlay_transparent, adapt_pic
 
 
@@ -21,7 +22,11 @@ class LivePrint:
 
 class Projector:
     def __init__(
-        self, background, poses_factory, projectable_region_factory, animation
+        self,
+        background,
+        poses_factory: PosesFactory,
+        projectable_region_factory,
+        animation,
     ):
         self._bg = background
         self._poses_factory = poses_factory

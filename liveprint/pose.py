@@ -2,31 +2,33 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple, Union
 
 
+class PosesFactory(ABC):
+    @abstractmethod
+    def poses(self, img) -> "Poses":
+        pass
+
+
 class Poses(ABC):
     @abstractmethod
     def torso_keypoints(
         self, threshold=0.15
-    ) -> Union[List["TorsoKeypoints"], Tuple["TorsoKeypoints"]]:
+    ) -> Union[List["TorsoKeyPoints"], Tuple["TorsoKeyPoints"]]:
         pass
 
 
-class TorsoKeypoints(ABC):
-    @property
+class TorsoKeyPoints(ABC):
     @abstractmethod
     def left_shoulder(self) -> "Keypoint":
         pass
 
-    @property
     @abstractmethod
     def right_shoulder(self) -> "Keypoint":
         pass
 
-    @property
     @abstractmethod
     def left_hip(self) -> "Keypoint":
         pass
 
-    @property
     @abstractmethod
     def right_hip(self) -> "Keypoint":
         pass

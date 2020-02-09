@@ -2,11 +2,11 @@ import cv2
 import numpy as np
 from methodtools import lru_cache
 
-from liveprint.pose import TorsoKeypoints
+from liveprint.pose import TorsoKeyPoints
 from liveprint.system_setup import PRCoords
 
 
-def adapt_pic(print_, image, torso: TorsoKeypoints):
+def adapt_pic(print_, image, torso: TorsoKeyPoints):
     """
     This function crops and warps
     :param print_: picture to be transformed and placed over the backaground
@@ -19,10 +19,10 @@ def adapt_pic(print_, image, torso: TorsoKeypoints):
         np.float32(((0, 0), (x, 0), (0, y), (x, y))),
         np.float32(
             [
-                torso.left_shoulder.coords(),
-                torso.right_shoulder.coords(),
-                torso.left_hip.coords(),
-                torso.right_hip.coords(),
+                torso.left_shoulder().coords(),
+                torso.right_shoulder().coords(),
+                torso.left_hip().coords(),
+                torso.right_hip().coords(),
             ]
         ),
     )
