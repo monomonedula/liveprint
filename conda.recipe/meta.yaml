@@ -14,7 +14,7 @@ requirements:
     - python
     - setuptools
   run:
-    - python
+    - python3.7
     - numpy
     - opencv
 
